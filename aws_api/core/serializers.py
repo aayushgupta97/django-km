@@ -1,12 +1,11 @@
 from .client import Client
 from rest_framework import serializers
 
+from .models import AWSCredentials
 
-class TaskCreateSerializer(serializers.Serializer):
-    access_key = serializers.CharField(max_length=128)
-    secret_key = serializers.CharField(max_length=512)
 
-    def validate(self, attrs):
+class TaskCreateSerializer(serializers.ModelSerializer):
+    def to_internal_value(self, attrs):
         """
         :param attrs: Input data from POST request
                   {access_key: <STRING>,
@@ -27,11 +26,14 @@ class TaskCreateSerializer(serializers.Serializer):
         )
         session = aws.session_access_secret_key(config)
         account_id, is_valid = aws.is_valid_credential(session)
-
-
-
         if not is_valid:
-            raise serializers.ValidationError("Invalid AWS Credentials.")
+            raise serializers.ValidationError({"message": "Invalid AWS Credentials."})
+        if AWSCredentials.objects.filter(account_id=account_id, user_id=attrs.get("user_id")).exists():
+            raise serializers.ValidationError({"message": "This account ID already exists."})
+
         attrs['account_id'] = account_id
         return attrs
 
+    class Meta:
+        model = AWSCredentials
+        fields = "__all__"
