@@ -61,3 +61,4 @@ def task_cases_time_series():
                                                           "total_recovered": item['totalrecovered'],
                                                           "total_deceased": item['totaldeceased']}
                                                 )
+
